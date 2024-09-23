@@ -89,6 +89,45 @@
             margin-top: 1rem;
         }
 
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px var(--shadow-color);
+            z-index: 1000;
+        }
+
+        .popup-content {
+            text-align: center;
+        }
+
+        #copyLinkBtn {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         @media (max-width: 480px) {
             .container {
                 padding: 1.5rem;
@@ -102,24 +141,37 @@
         <form id="referralForm">
             <label for="name">Name:</label>
             <input type="text" id="name" required>
-            <button type="button" onclick="generateCopyAndQR()">Generieren, Kopieren und QR-Code erstellen</button>
+            <button type="button" id="generateBtn" onclick="generateCopyAndQR()">Generieren, Kopieren und QR-Code erstellen</button>
         </form>
         <p id="successMessage"></p>
         <div id="qrCodeContainer"></div>
+        <button id="copyLinkBtn" onclick="copyToClipboard()" style="display: none;">Link kopieren</button>
+    </div>
+
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <p>Link wurde generiert, kopiert und QR-Code erstellt!</p>
+        </div>
     </div>
 
     <script>
+        let generatedLink = '';
+
         function generateCopyAndQR() {
             var name = document.getElementById("name").value.trim();
             if (name === "") {
                 alert("Bitte geb einen Namen ein.");
                 return;
             }
-            var formattedName = encodeURIComponent(name);
-            var generatedLink = "https://docs.google.com/forms/d/e/1FAIpQLSeTcdop2ReD7UivFK11VXLU1bpbE0xlzOb4hd10RWfcukBwyA/viewform?entry.1206042007=" + formattedName;
-            
-            // Copy to clipboard
-            navigator.clipboard.writeText(generatedLink).then(function() {
+
+            var generateBtn = document.getElementById("generateBtn");
+            generateBtn.innerHTML = 'Generiere... <span class="spinner"></span>';
+            generateBtn.disabled = true;
+
+            setTimeout(function() {
+                var formattedName = encodeURIComponent(name);
+                generatedLink = "https://docs.google.com/forms/d/e/1FAIpQLSeTcdop2ReD7UivFK11VXLU1bpbE0xlzOb4hd10RWfcukBwyA/viewform?entry.1206042007=" + formattedName;
+                
                 // Generate QR Code
                 var qrCodeContainer = document.getElementById("qrCodeContainer");
                 qrCodeContainer.innerHTML = ''; // Clear previous QR code
@@ -129,16 +181,28 @@
                     height: 128
                 });
 
-                // Show success message
-                var successMessage = document.getElementById("successMessage");
-                successMessage.textContent = "Link generiert, in die Zwischenablage kopiert und QR-Code erstellt!";
-                successMessage.style.display = "block";
+                // Show popup
+                var popup = document.getElementById("popup");
+                popup.style.display = "block";
                 setTimeout(function() {
-                    successMessage.style.display = "none";
-                }, 5000);
+                    popup.style.display = "none";
+                }, 3000);
+
+                // Show copy link button
+                document.getElementById("copyLinkBtn").style.display = "block";
+
+                // Reset button
+                generateBtn.innerHTML = 'Generieren, Kopieren und QR-Code erstellen';
+                generateBtn.disabled = false;
+            }, 2000);
+        }
+
+        function copyToClipboard() {
+            navigator.clipboard.writeText(generatedLink).then(function() {
+                alert('Link wurde in die Zwischenablage kopiert!');
             }, function(err) {
                 console.error('Could not copy text: ', err);
-                alert('Fehler beim Kopieren des Links. Bitte versuch es erneut..');
+                alert('Fehler beim Kopieren des Links. Bitte versuche es erneut.');
             });
         }
     </script>
